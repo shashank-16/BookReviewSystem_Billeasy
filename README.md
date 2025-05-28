@@ -13,6 +13,7 @@ A RESTful API for managing books and reviews, built with Node.js, Express, and P
 - [Setup](#setup)
 - [Environment Variables](#environment-variables)
 - [Running the Application](#running-the-application)
+- [Database Schema](#database-schema)
 
 ## Features
 - User authentication with JWT
@@ -152,8 +153,11 @@ All successful responses follow this format:
    ```bash
    npm install
    ```
-3. Set up environment variables (see .env.example)
-4. Run the database migrations
+3. Run the database migrations Sql:
+   ```bash
+   psql -U postgres -d bookreview -f config/databaseMigration.sql
+   ```
+4. Set up environment variables (see .env.example)
 5. Start the server:
    ```bash
    npm start
@@ -175,3 +179,20 @@ PORT=3000
 Most endpoints require authentication. Include the JWT token in the Authorization header:
 ```
 Authorization: Bearer your_jwt_token_here
+```
+
+## Database Schema
+
+ ┌────────────┐        1           N        ┌────────────┐
+ │   users    │────────────────────────────▶│   reviews  │
+ └────────────┘                             └────────────┘
+     ▲     ▲                                     ▲
+     │     │                                     │
+     │     └──────────────────────┐              │
+     │                            │              │
+     │      created_by            │              │
+     │                            ▼              │
+ ┌────────────┐        1           N        ┌────────────┐
+ │   books    │────────────────────────────▶│   reviews  │
+ └────────────┘                             └────────────┘
+

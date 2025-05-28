@@ -1,5 +1,13 @@
 const db = require('../config/db');
 
+/**
+ * @desc    Get all books with optional filtering and pagination
+ * @route   GET /api/books
+ * @access  Public
+ * @param   {Object} req - Express request object
+ * @param   {Object} res - Express response object
+ * @returns {Object} JSON response with books and pagination info
+ */
 exports.getBooks = async (req, res) => {
     const { author, genre, page = 1, size = 10 } = req.query;
     const offset = (page - 1) * size;
@@ -40,6 +48,18 @@ exports.getBooks = async (req, res) => {
     res.json(response);
 };
 
+/**
+ * @desc    Add a new book
+ * @route   POST /api/books
+ * @access  Private
+ * @param   {Object} req - Express request object
+ * @param   {Object} req.body - Book data
+ * @param   {string} req.body.title - Book title
+ * @param   {string} req.body.author - Book author
+ * @param   {string} [req.body.genre] - Book genre (optional)
+ * @param   {Object} res - Express response object
+ * @returns {Object} JSON response with the created book
+ */
 exports.addBook = async (req, res) => {
     const { title, author, genre } = req.body;
     const result = await db.query(
@@ -49,6 +69,17 @@ exports.addBook = async (req, res) => {
     res.json(result.rows[0]);
 };
 
+/**
+ * @desc    Get a single book by ID with its reviews
+ * @route   GET /api/books/:id
+ * @access  Public
+ * @param   {Object} req - Express request object
+ * @param   {string} req.params.id - Book ID
+ * @param   {number} [req.query.page=1] - Page number for reviews pagination
+ * @param   {number} [req.query.limit=10] - Number of reviews per page
+ * @param   {Object} res - Express response object
+ * @returns {Object} JSON response with book details and paginated reviews
+ */
 exports.getBookById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -113,6 +144,17 @@ exports.getBookById = async (req, res) => {
     }
 };
 
+/**
+ * @desc    Search for books by title or author
+ * @route   GET /api/books/search
+ * @access  Public
+ * @param   {Object} req - Express request object
+ * @param   {string} req.query.query - Search term
+ * @param   {number} [req.query.page=1] - Page number
+ * @param   {number} [req.query.limit=10] - Items per page
+ * @param   {Object} res - Express response object
+ * @returns {Object} JSON response with matching books and pagination info
+ */
 exports.searchBooks = async (req, res) => {
     try {
         const { query } = req.query;
@@ -131,11 +173,28 @@ exports.searchBooks = async (req, res) => {
     }
 };
 
+/**
+ * @desc    Add a review for a book
+ * @route   POST /api/books/:id/reviews
+ * @access  Private
+ * @param   {Object} req - Express request object
+ * @param   {string} req.params.id - Book ID
+ * @param   {Object} req.body - Review data
+ * @param   {string} req.body.review_text - The review text
+ * @param   {number} req.body.rating - Rating (1-5)
+ * @param   {Object} req.user - Authenticated user (from auth middleware)
+ * @param   {string} req.user.id - User ID
+ * @param   {Object} res - Express response object
+ * @returns {Object} JSON response with the created review
+ */
 exports.addReviewForBook = async (req, res) => {
     try {
         const { id } = req.params;
         const { review_text, rating } = req.body;
-        const result = await db.query('INSERT INTO reviews (book_id, review_text, user_id, rating) VALUES ($1, $2, $3, $4) RETURNING *', [id, review_text, req.user.id, rating]);
+        const result = await db.query(
+            'INSERT INTO reviews (book_id, review_text, user_id, rating) VALUES ($1, $2, $3, $4) RETURNING *',
+            [id, review_text, req.user.id, rating]
+        );
         res.json(result.rows[0]);
     } catch (error) {
         console.error('Error adding review:', error);
@@ -143,11 +202,33 @@ exports.addReviewForBook = async (req, res) => {
     }
 };
 
+/**
+ * @desc    Update a review
+ * @route   PUT /api/reviews/:id
+ * @access  Private
+ * @param   {Object} req - Express request object
+ * @param   {string} req.params.id - Review ID
+ * @param   {Object} req.body - Updated review data
+ * @param   {string} [req.body.review_text] - Updated review text
+ * @param   {number} [req.body.rating] - Updated rating (1-5)
+ * @param   {Object} req.user - Authenticated user
+ * @param   {string} req.user.id - User ID
+ * @param   {Object} res - Express response object
+ * @returns {Object} JSON response with the updated review
+ */
 exports.updateReviewForBook = async (req, res) => {
     try {
         const { id } = req.params;
         const { review_text, rating } = req.body;
-        const result = await db.query('UPDATE reviews SET review_text = $2, rating = $3 WHERE id = $1 RETURNING *', [id, review_text, rating]);
+        const result = await db.query(
+            'UPDATE reviews SET review_text = $2, rating = $3, updated_at = NOW() WHERE id = $1 AND user_id = $4 RETURNING *',
+            [id, review_text, rating, req.user.id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Review not found or unauthorized' });
+        }
+
         res.json(result.rows[0]);
     } catch (error) {
         console.error('Error updating review:', error);
@@ -155,11 +236,30 @@ exports.updateReviewForBook = async (req, res) => {
     }
 };
 
+/**
+ * @desc    Delete a review
+ * @route   DELETE /api/reviews/:id
+ * @access  Private
+ * @param   {Object} req - Express request object
+ * @param   {string} req.params.id - Review ID
+ * @param   {Object} req.user - Authenticated user
+ * @param   {string} req.user.id - User ID
+ * @param   {Object} res - Express response object
+ * @returns {Object} JSON response with success message or error
+ */
 exports.deleteReviewForBook = async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await db.query('DELETE FROM reviews WHERE id = $1 RETURNING *', [id]);
-        res.json(result.rows[0]);
+        const result = await db.query(
+            'DELETE FROM reviews WHERE id = $1 AND user_id = $2 RETURNING *',
+            [id, req.user.id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Review not found or unauthorized' });
+        }
+
+        res.json({ message: 'Review deleted successfully' });
     } catch (error) {
         console.error('Error deleting review:', error);
         res.status(500).json({ error: 'An error occurred while deleting the review' });
