@@ -253,3 +253,33 @@ Authorization: Bearer your_jwt_token_here
  ┌────────────┐        1           N        ┌────────────┐
  │   books    │────────────────────────────▶│   reviews  │
  └────────────┘                             └────────────┘
+```
+
+## Backend Design
+
+### Authentication
+
+#### JWT Authentication
+- User registration and login
+- JWT token generation and validation
+- Protected routes with authentication middleware
+
+#### User Management
+- User registration and login
+- JWT token generation and validation
+- Protected routes with authentication middleware
+
+#### Book Management
+- CRUD operations for books
+- Search functionality
+- Pagination
+- Input validation
+
+#### Review Management
+- Add, update, and delete reviews
+- Search functionality
+- Pagination
+- Input validation
+
+## DataBase Choice
+- PostgreSQL - Relational Database - For Structured Data
