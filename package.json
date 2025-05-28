@@ -1,7 +1,7 @@
 {
-  "name": "bookreviewsystem_billeasy",
+  "name": "book-review-system",
   "version": "1.0.0",
-  "description": "",
+  "description": "A book review system API",
   "homepage": "https://github.com/shashank-16/BookReviewSystem_Billeasy#readme",
   "bugs": {
     "url": "https://github.com/shashank-16/BookReviewSystem_Billeasy/issues"
@@ -25,6 +25,11 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "pg": "^8.16.0"
+    "pg": "^8.16.0",
+    "swagger-jsdoc": "^6.2.5",
+    "swagger-ui-express": "^4.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   }
 }

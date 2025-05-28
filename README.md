@@ -147,6 +147,9 @@ All successful responses follow this format:
 - `404 Not Found`: Resource not found
 - `500 Internal Server Error`: Server error
 
+## Swagger Documentation
+- `http://localhost:3000/api-docs`  
+
 ## Setup
 1. Clone the repository
 2. Install dependencies:
