@@ -182,7 +182,7 @@ Authorization: Bearer your_jwt_token_here
 ```
 
 ## Database Schema
-
+```
  ┌────────────┐        1           N        ┌────────────┐
  │   users    │────────────────────────────▶│   reviews  │
  └────────────┘                             └────────────┘
@@ -195,4 +195,4 @@ Authorization: Bearer your_jwt_token_here
  ┌────────────┐        1           N        ┌────────────┐
  │   books    │────────────────────────────▶│   reviews  │
  └────────────┘                             └────────────┘
-
+```
